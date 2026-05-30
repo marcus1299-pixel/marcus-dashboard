@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashbord — Marcus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://sdk.scdn.co/spotify-player.js"></script>
+<style>
+  :root{
+    --bg:#0c0a09;
+    --bg-2:#13100e;
+    --surface:rgba(30,24,21,0.55);
+    --surface-2:rgba(38,30,26,0.7);
+    --surface-solid:#1a1512;
+    --border:rgba(255,255,255,0.07);
+    --border-warm:rgba(255,120,60,0.22);
+    --text:#f7efe8;
+    --dim:#ab9d92;
+    --faint:#6c615a;
+    --accent:#ff5a1f;
+    --accent-2:#ff8a3d;
+    --accent-red:#ff3b30;
+    --green:#1db954;
+    --glow:rgba(255,90,31,0.45);
+    --grad:linear-gradient(135deg,#ff8a3d 0%,#ff4d1f 55%,#ff2d55 100%);
+    --radius:24px;
+    --radius-sm:16px;
+    --ease:cubic-bezier(.22,1,.36,1);
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  body{
+    font-family:'Manrope',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    overflow-x:hidden;
+    position:relative;
+  }
+
+  body::before{
+    content:"";
+    position:fixed;inset:0;z-index:-2;
+    background:
+      radial-gradient(800px 600px at 12% -5%, rgba(255,120,40,0.18), transparent 60%),
+      radial-gradient(700px 700px at 100% 8%, rgba(255,45,85,0.13), transparent 55%),
+      radial-gradient(900px 500px at 50% 110%, rgba(255,90,31,0.10), transparent 60%),
+      linear-gradient(180deg,#0c0a09,#0a0807);
+  }
+  body::after{
+    content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.04;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .wrap{max-width:1280px;margin:0 auto;padding:40px 36px 80px}
+
+  header{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    margin-bottom:34px;gap:24px;flex-wrap:wrap;
+    animation:rise .8s var(--ease) both;
+  }
+  .greeting .eyebrow{
+    font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--accent-2);margin-bottom:10px;display:flex;align-items:center;gap:9px;
+  }
+  .eyebrow .pip{width:7px;height:7px;border-radius:50%;background:var(--grad);box-shadow:0 0 12px var(--glow)}
+  .greeting h1{
+    font-family:'Bricolage Grotesque',sans-serif;
+    font-weight:800;font-size:clamp(34px,5vw,52px);line-height:.98;letter-spacing:-.02em;
+  }
+  .greeting h1 .name{
+    background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .clock{text-align:right}
+  .clock .time{
+    font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:40px;letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums;line-height:1;
+  }
+  .clock .date{color:var(--dim);font-weight:600;font-size:14px;margin-top:8px;text-transform:capitalize}
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:24px}
+  .stat{
+    background:var(--surface);backdrop-filter:blur(24px) saturate(160%);
+    -webkit-backdrop-filter:blur(24px) saturate(160%);
+    border:1px solid var(--border);border-radius:var(--radius-sm);
+    padding:20px 22px;position:relative;overflow:hidden;
+    animation:rise .8s var(--ease) both;
+  }
+  .stat:nth-child(1){animation-delay:.05s}
+  .stat:nth-child(2){animation-delay:.1s}
+  .stat:nth-child(3){animation-delay:.15s}
+  .stat .ico{
+    width:38px;height:38px;border-radius:11px;display:grid;place-items:center;
+    background:rgba(255,90,31,0.12);border:1px solid var(--border-warm);margin-bottom:14px;
+  }
+  .stat .ico svg{width:19px;height:19px;stroke:var(--accent-2)}
+  .stat .num{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:34px;line-height:1;letter-spacing:-.02em}
+  .stat .lbl{color:var(--dim);font-weight:600;font-size:13px;margin-top:7px}
+  .stat::after{content:"";position:absolute;top:-30px;right:-30px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,var(--glow),transparent 70%);opacity:.5}
+
+  .grid{display:grid;grid-template-columns:1fr 1.22fr;gap:22px;align-items:start;margin-bottom:22px}
+
+  .card{
+    background:var(--surface);backdrop-filter:blur(28px) saturate(160%);
+    -webkit-backdrop-filter:blur(28px) saturate(160%);
+    border:1px solid var(--border);border-radius:var(--radius);
+    padding:26px;position:relative;
+    animation:rise .85s var(--ease) both;
+  }
+  .card.todos{animation-delay:.2s}
+  .card.cal{animation-delay:.28s}
+  .card.music{animation-delay:.34s;margin-bottom:22px}
+  .card.proj{animation-delay:.4s}
+
+  .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+  .card-title{display:flex;align-items:center;gap:12px}
+  .card-title .badge{
+    width:34px;height:34px;border-radius:10px;display:grid;place-items:center;
+    background:var(--grad);box-shadow:0 6px 18px -6px var(--glow);
+  }
+  .card-title .badge svg{width:18px;height:18px;stroke:#fff;stroke-width:2.2}
+  .card-title h2{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:21px;letter-spacing:-.01em}
+  .card-head .meta{font-size:13px;font-weight:600;color:var(--dim)}
+
+  .add{
+    display:flex;align-items:center;gap:10px;
+    background:rgba(0,0,0,0.25);border:1px solid var(--border);
+    border-radius:14px;padding:4px 4px 4px 16px;margin-bottom:16px;
+    transition:border-color .25s var(--ease),background .25s var(--ease);
+  }
+  .add:focus-within{border-color:var(--border-warm);background:rgba(255,90,31,0.06)}
+  .add input{
+    flex:1;background:none;border:none;outline:none;color:var(--text);
+    font-family:inherit;font-size:15px;font-weight:500;padding:11px 0;
+  }
+  .add input::placeholder{color:var(--faint)}
+  .add .time{
+    width:auto;flex:none;color:var(--dim);font-size:13px;font-weight:600;
+    border-right:1px solid var(--border);padding-right:12px;margin-right:2px;color-scheme:dark;
+  }
+  .add .time::-webkit-calendar-picker-indicator{filter:invert(.6) sepia(1) saturate(4) hue-rotate(-12deg);cursor:pointer}
+  .addbtn{
+    width:38px;height:38px;border:none;border-radius:11px;cursor:pointer;flex:none;
+    background:var(--grad);display:grid;place-items:center;
+    box-shadow:0 6px 16px -6px var(--glow);transition:transform .2s var(--ease),filter .2s;
+  }
+  .addbtn:hover{transform:scale(1.06)}
+  .addbtn:active{transform:scale(.94)}
+  .addbtn svg{width:19px;height:19px;stroke:#fff;stroke-width:2.6}
+
+  .list{display:flex;flex-direction:column;gap:7px;max-height:380px;overflow-y:auto;margin:0 -6px;padding:0 6px}
+  .todo{display:flex;align-items:center;gap:13px;padding:12px;border-radius:13px;cursor:pointer;transition:background .2s var(--ease);position:relative}
+  .todo:hover{background:rgba(255,255,255,0.035)}
+  .check{width:23px;height:23px;border-radius:7px;border:2px solid var(--faint);flex:none;display:grid;place-items:center;transition:all .25s var(--ease)}
+  .check svg{width:13px;height:13px;stroke:#fff;stroke-width:3;stroke-dasharray:20;stroke-dashoffset:20;transition:stroke-dashoffset .3s var(--ease) .05s}
+  .todo.done .check{background:var(--grad);border-color:transparent;box-shadow:0 4px 12px -4px var(--glow)}
+  .todo.done .check svg{stroke-dashoffset:0}
+  .todo .txt{flex:1;font-weight:600;font-size:15px;transition:color .25s,opacity .25s}
+  .todo.done .txt{color:var(--faint);text-decoration:line-through;opacity:.65}
+  .del{width:30px;height:30px;border:none;background:none;border-radius:9px;cursor:pointer;flex:none;display:grid;place-items:center;opacity:0;transition:opacity .2s,background .2s,transform .2s}
+  .todo:hover .del,.proj-card:hover .del,.ev:hover .del{opacity:1}
+  .del:hover{background:rgba(255,59,48,0.15)}
+  .del svg{width:15px;height:15px;stroke:var(--accent-red);stroke-width:2}
+
+  .cal-nav{display:flex;align-items:center;gap:6px}
+  .cal-nav button{width:34px;height:34px;border:1px solid var(--border);background:rgba(0,0,0,0.2);border-radius:10px;cursor:pointer;display:grid;place-items:center;transition:all .2s var(--ease)}
+  .cal-nav button:hover{border-color:var(--border-warm);background:rgba(255,90,31,0.08)}
+  .cal-nav button svg{width:16px;height:16px;stroke:var(--text);stroke-width:2.2}
+  .cal-month{font-weight:700;font-size:15px;min-width:130px;text-align:center;text-transform:capitalize}
+
+  .dow{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:8px}
+  .dow span{text-align:center;font-size:11px;font-weight:700;color:var(--faint);letter-spacing:.06em;text-transform:uppercase}
+  .days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .day{aspect-ratio:1;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:600;font-size:14px;cursor:pointer;position:relative;border:1px solid transparent;transition:all .18s var(--ease)}
+  .day.pad{opacity:0;pointer-events:none}
+  .day:hover{background:rgba(255,255,255,0.05)}
+  .day.today{color:var(--accent-2)}
+  .day.today::after{content:"";position:absolute;inset:0;border:1.5px solid var(--border-warm);border-radius:12px}
+  .day.sel{background:var(--grad);color:#fff;box-shadow:0 8px 20px -8px var(--glow)}
+  .day.sel.today{color:#fff}
+  .day .dot{width:5px;height:5px;border-radius:50%;background:var(--accent-2);position:absolute;bottom:7px;transition:background .2s}
+  .day.sel .dot{background:#fff}
+
+  .sel-events{margin-top:20px;border-top:1px solid var(--border);padding-top:18px}
+  .sel-events .sel-date{font-weight:700;font-size:14px;margin-bottom:14px;text-transform:capitalize}
+  .sel-events .sel-date span{color:var(--accent-2)}
+  .ev-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;max-height:150px;overflow-y:auto}
+  .ev{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:11px;background:rgba(255,255,255,0.03);transition:background .2s}
+  .ev:hover{background:rgba(255,255,255,0.06)}
+  .ev .etime{font-variant-numeric:tabular-nums;font-weight:700;font-size:13px;color:var(--accent-2);min-width:42px}
+  .ev .etime.none{color:var(--faint)}
+  .ev .etxt{flex:1;font-weight:600;font-size:14px}
+
+  .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
+  .proj-card{border-radius:var(--radius-sm);overflow:hidden;position:relative;border:1px solid var(--border);background:var(--surface-solid);transition:transform .3s var(--ease),box-shadow .3s var(--ease),border-color .3s}
+  .proj-card:hover{transform:translateY(-5px);box-shadow:0 22px 40px -20px rgba(0,0,0,.7);border-color:var(--border-warm)}
+  .proj-cover{height:118px;position:relative;background-size:cover;background-position:center}
+  .proj-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(26,21,18,0.96),rgba(26,21,18,0.15)),linear-gradient(125deg,rgba(255,90,31,0.38),transparent 60%)}
+  .proj-card .del{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.45);backdrop-filter:blur(8px);z-index:3}
+  .proj-card .del:hover{background:rgba(255,59,48,0.3)}
+  .proj-body{padding:16px 18px 20px;position:relative}
+  .proj-name{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:17px;letter-spacing:-.01em;margin-bottom:14px}
+  .prog-row{display:flex;align-items:center;gap:12px}
+  .prog-track{flex:1;height:7px;border-radius:6px;background:rgba(255,255,255,0.08);overflow:hidden}
+  .prog-fill{height:100%;border-radius:6px;background:var(--grad);transition:width .4s var(--ease);box-shadow:0 0 12px -2px var(--glow)}
+  .prog-val{font-weight:800;font-size:13px;font-variant-numeric:tabular-nums;color:var(--accent-2);min-width:38px;text-align:right}
+  .prog-wrap{position:relative}
+  .proj-card input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:7px;border-radius:6px;background:transparent;position:absolute;left:0;cursor:pointer;margin-top:-7px;opacity:0}
+  .proj-card input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%}
+
+  .empty{text-align:center;padding:30px 16px;color:var(--faint);font-weight:600;font-size:14px}
+  .empty .em-ico{font-size:30px;margin-bottom:10px;opacity:.6}
+
+  .proj-add{border:1.5px dashed var(--border-warm);border-radius:var(--radius-sm);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:200px;cursor:pointer;transition:all .25s var(--ease);color:var(--dim);background:rgba(255,90,31,0.03)}
+  .proj-add:hover{background:rgba(255,90,31,0.08);color:var(--accent-2);border-color:var(--accent)}
+  .proj-add .pa-ico{width:46px;height:46px;border-radius:14px;background:rgba(255,90,31,0.12);display:grid;place-items:center}
+  .proj-add .pa-ico svg{width:24px;height:24px;stroke:var(--accent-2);stroke-width:2.2}
+  .proj-add span{font-weight:700;font-size:14px}
+
+  /* ===== MUSIC / Spotify ===== */
+  .badge.sp{background:linear-gradient(135deg,#1db954,#13803a)!important;box-shadow:0 6px 18px -6px rgba(29,185,84,.5)!important}
+  .sp-connect{display:flex;flex-direction:column;align-items:center;gap:16px;padding:34px 20px;text-align:center}
+  .sp-connect p{color:var(--dim);font-weight:600;font-size:14px;max-width:360px;line-height:1.5}
+  .sp-btn{display:inline-flex;align-items:center;gap:10px;background:#1db954;color:#03150a;border:none;border-radius:50px;padding:13px 24px;font-family:inherit;font-weight:800;font-size:15px;cursor:pointer;transition:transform .2s var(--ease),filter .2s}
+  .sp-btn:hover{transform:scale(1.04);filter:brightness(1.08)}
+  .sp-btn svg{width:20px;height:20px;fill:#03150a}
+  .sp-btn.ghost{background:rgba(255,255,255,0.06);color:var(--dim);font-weight:700;font-size:13px;padding:9px 18px}
+  .sp-btn.ghost:hover{background:rgba(255,255,255,0.1)}
+
+  .player{display:flex;gap:24px;align-items:center;flex-wrap:wrap}
+  .np-art{width:108px;height:108px;border-radius:16px;flex:none;background:var(--surface-solid) center/cover;box-shadow:0 14px 30px -12px rgba(0,0,0,.7);position:relative;overflow:hidden}
+  .np-art::after{content:"";position:absolute;inset:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);border-radius:16px}
+  .np-info{flex:1;min-width:200px}
+  .np-track{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:22px;letter-spacing:-.01em;margin-bottom:5px;line-height:1.1}
+  .np-artist{color:var(--dim);font-weight:600;font-size:14px;margin-bottom:16px}
+  .np-bar{height:5px;border-radius:4px;background:rgba(255,255,255,0.1);overflow:hidden;margin-bottom:18px}
+  .np-bar-fill{height:100%;background:var(--grad);border-radius:4px;width:0;transition:width 1s linear}
+  .np-controls{display:flex;align-items:center;gap:10px}
+  .np-ctl{width:42px;height:42px;border-radius:50%;border:1px solid var(--border);background:rgba(0,0,0,0.25);cursor:pointer;display:grid;place-items:center;transition:all .2s var(--ease)}
+  .np-ctl:hover{border-color:var(--border-warm);background:rgba(255,90,31,0.08)}
+  .np-ctl svg{width:18px;height:18px;fill:var(--text)}
+  .np-ctl.play{width:54px;height:54px;background:var(--grad);border:none;box-shadow:0 8px 20px -8px var(--glow)}
+  .np-ctl.play svg{width:22px;height:22px;fill:#fff}
+  .np-idle{color:var(--faint);font-weight:600}
+
+  .pl-section{margin-top:24px;border-top:1px solid var(--border);padding-top:20px}
+  .pl-section h3{font-weight:700;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-bottom:14px}
+  .pl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+  .pl{cursor:pointer;transition:transform .25s var(--ease)}
+  .pl:hover{transform:translateY(-4px)}
+  .pl-cover{aspect-ratio:1;border-radius:12px;background:var(--surface-solid) center/cover;box-shadow:0 10px 24px -14px rgba(0,0,0,.8);margin-bottom:9px;position:relative;overflow:hidden}
+  .pl-cover::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.4),transparent 50%);opacity:0;transition:opacity .25s}
+  .pl:hover .pl-cover::after{opacity:1}
+  .pl-play{position:absolute;right:10px;bottom:10px;width:40px;height:40px;border-radius:50%;background:#1db954;display:grid;place-items:center;opacity:0;transform:translateY(8px);transition:all .25s var(--ease);box-shadow:0 8px 18px -6px rgba(0,0,0,.6)}
+  .pl:hover .pl-play{opacity:1;transform:translateY(0)}
+  .pl-play svg{width:18px;height:18px;fill:#03150a;margin-left:2px}
+  .pl-name{font-weight:700;font-size:13px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:6px}
+  ::-webkit-scrollbar-thumb:hover{background:rgba(255,120,60,0.3)}
+
+  @keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+
+  @media(max-width:900px){
+    .grid{grid-template-columns:1fr}
+    .stats{grid-template-columns:1fr}
+    .wrap{padding:28px 20px 60px}
+    header{align-items:flex-start;flex-direction:column}
+    .clock{text-align:left}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="greeting">
+      <div class="eyebrow"><span class="pip"></span><span>Ditt dashbord</span></div>
+      <h1 id="hello">God dag, <span class="name">Marcus</span></h1>
+    </div>
+    <div class="clock">
+      <div class="time" id="clock">--:--</div>
+      <div class="date" id="today"></div>
+    </div>
+  </header>
+
+  <section class="stats">
+    <div class="stat">
+      <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="num" id="stat-todo">0</div>
+      <div class="lbl">gjøremål igjen i dag</div>
+    </div>
+    <div class="stat">
+      <div class="ico"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="3" stroke-width="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <div class="num" id="stat-ev">0</div>
+      <div class="lbl">hendelser i dag</div>
+    </div>
+    <div class="stat">
+      <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h4l2 3h8a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke-width="2" stroke-linejoin="round"/></svg></div>
+      <div class="num" id="stat-proj">0</div>
+      <div class="lbl">aktive prosjekter</div>
+    </div>
+  </section>
+
+  <div class="grid">
+    <section class="card todos">
+      <div class="card-head">
+        <div class="card-title">
+          <div class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          <h2>Gjøremål</h2>
+        </div>
+        <div class="meta" id="todo-meta"></div>
+      </div>
+      <div class="add">
+        <input id="todo-input" type="text" placeholder="Legg til et gjøremål…" maxlength="120" />
+        <button class="addbtn" id="todo-add" aria-label="Legg til"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></button>
+      </div>
+      <div class="list" id="todo-list"></div>
+    </section>
+
+    <section class="card cal">
+      <div class="card-head">
+        <div class="card-title">
+          <div class="badge"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18" stroke-linecap="round"/></svg></div>
+          <h2>Kalender</h2>
+        </div>
+        <div class="cal-nav">
+          <button id="prev" aria-label="Forrige"><svg viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div class="cal-month" id="cal-month"></div>
+          <button id="next" aria-label="Neste"><svg viewBox="0 0 24 24" fill="none"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+      </div>
+      <div class="dow"><span>Man</span><span>Tir</span><span>Ons</span><span>Tor</span><span>Fre</span><span>Lør</span><span>Søn</span></div>
+      <div class="days" id="days"></div>
+      <div class="sel-events">
+        <div class="sel-date" id="sel-date"></div>
+        <div class="ev-list" id="ev-list"></div>
+        <div class="add">
+          <input class="time" id="ev-time" type="time" />
+          <input id="ev-input" type="text" placeholder="Legg til hendelse…" maxlength="100" />
+          <button class="addbtn" id="ev-add" aria-label="Legg til hendelse"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- MUSIC -->
+  <section class="card music">
+    <div class="card-head">
+      <div class="card-title">
+        <div class="badge sp"><svg viewBox="0 0 24 24" fill="none"><path d="M9 18V5l12-2v13" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke="#fff" stroke-width="2"/><circle cx="18" cy="16" r="3" stroke="#fff" stroke-width="2"/></svg></div>
+        <h2>Musikk</h2>
+      </div>
+      <div class="meta" id="sp-meta"></div>
+    </div>
+    <div id="sp-body">
+      <div class="sp-connect" id="sp-connect">
+        <p id="sp-msg">Koble til Spotify for å spille musikk rett her, styre avspilling og bla i spillelistene dine.</p>
+        <button class="sp-btn" id="sp-login"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.59 14.43c-.18.3-.57.39-.87.21-2.38-1.46-5.38-1.79-8.92-.98-.34.08-.68-.14-.76-.48-.08-.34.14-.68.48-.76 3.87-.88 7.19-.51 9.86 1.13.3.18.39.57.21.88zm1.22-2.72c-.23.37-.71.48-1.08.26-2.73-1.68-6.89-2.16-10.12-1.18-.41.12-.85-.11-.98-.52-.12-.41.11-.85.52-.98 3.69-1.12 8.27-.58 11.4 1.34.37.23.49.71.26 1.08zm.11-2.84C14.7 8.87 9.39 8.7 6.3 9.64c-.5.15-1.02-.13-1.17-.62-.15-.5.13-1.02.62-1.17 3.55-1.08 9.42-.87 13.14 1.33.44.26.59.83.33 1.27-.26.44-.83.59-1.27.33z"/></svg>Koble til Spotify</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section class="card proj">
+    <div class="card-head">
+      <div class="card-title">
+        <div class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h4l2 3h8a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke-linejoin="round"/></svg></div>
+        <h2>Prosjekter</h2>
+      </div>
+      <div class="meta" id="proj-meta"></div>
+    </div>
+    <div class="proj-grid" id="proj-grid"></div>
+  </section>
+
+</div>
+
+<script>
+/* ===================== CORE STATE ===================== */
+const KEY='marcus_dashboard_v1';
+const COVERS=[
+  'https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=800&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=800&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1497215728101-856f4ea42174?w=800&q=80&auto=format&fit=crop'
+];
+const MONTHS=['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'];
+const WDAYS=['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
+
+let state=load();
+let view=new Date(); view.setDate(1);
+let selected=todayKey();
+
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s)return s;}catch(e){}return {todos:[],events:{},projects:[]};}
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function pad(n){return String(n).padStart(2,'0')}
+function keyOf(y,m,d){return y+'-'+pad(m+1)+'-'+pad(d)}
+function todayKey(){const t=new Date();return keyOf(t.getFullYear(),t.getMonth(),t.getDate())}
+function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=pad(n.getHours())+':'+pad(n.getMinutes());
+  document.getElementById('today').textContent=WDAYS[n.getDay()]+' '+n.getDate()+'. '+MONTHS[n.getMonth()];
+  const h=n.getHours();let g='God kveld';
+  if(h<5)g='God natt';else if(h<11)g='God morgen';else if(h<17)g='God dag';else if(h<22)g='God kveld';
+  document.getElementById('hello').innerHTML=g+', <span class="name">Marcus</span>';
+}
+
+/* ===================== TODOS ===================== */
+function renderTodos(){
+  const list=document.getElementById('todo-list');
+  const sorted=[...state.todos].sort((a,b)=>a.done-b.done);
+  list.innerHTML=sorted.length?sorted.map(t=>`
+    <div class="todo ${t.done?'done':''}" data-id="${t.id}">
+      <div class="check"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 6"/></svg></div>
+      <div class="txt">${esc(t.text)}</div>
+      <button class="del" data-del="${t.id}" aria-label="Slett"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>`).join('') : '<div class="empty"><div class="em-ico">☀️</div>Ingen gjøremål — nyt dagen</div>';
+  const done=state.todos.filter(t=>t.done).length;
+  document.getElementById('todo-meta').textContent=state.todos.length?`${done} av ${state.todos.length} fullført`:'';
+  renderStats();
+}
+function addTodo(){const i=document.getElementById('todo-input');const v=i.value.trim();if(!v)return;state.todos.unshift({id:uid(),text:v,done:false});i.value='';save();renderTodos();}
+
+/* ===================== CALENDAR ===================== */
+function renderCalendar(){
+  const y=view.getFullYear(),m=view.getMonth();
+  document.getElementById('cal-month').textContent=MONTHS[m]+' '+y;
+  const offset=(new Date(y,m,1).getDay()+6)%7;
+  const dim=new Date(y,m+1,0).getDate();const tk=todayKey();
+  let html='';
+  for(let i=0;i<offset;i++)html+='<div class="day pad"></div>';
+  for(let d=1;d<=dim;d++){
+    const k=keyOf(y,m,d);const cls=['day'];
+    if(k===tk)cls.push('today');if(k===selected)cls.push('sel');
+    const has=state.events[k]&&state.events[k].length;
+    html+=`<div class="${cls.join(' ')}" data-day="${k}">${d}${has?'<span class="dot"></span>':''}</div>`;
+  }
+  document.getElementById('days').innerHTML=html;renderSelected();
+}
+function renderSelected(){
+  const [y,m,d]=selected.split('-').map(Number);const dt=new Date(y,m-1,d);
+  document.getElementById('sel-date').innerHTML=`${WDAYS[dt.getDay()]} <span>${d}. ${MONTHS[m-1]}</span>`;
+  const evs=(state.events[selected]||[]).slice().sort((a,b)=>(a.time||'99').localeCompare(b.time||'99'));
+  const list=document.getElementById('ev-list');
+  list.innerHTML=evs.length?evs.map(e=>`
+    <div class="ev">
+      <span class="etime ${e.time?'':'none'}">${e.time||'—'}</span>
+      <span class="etxt">${esc(e.text)}</span>
+      <button class="del" data-evdel="${e.id}" aria-label="Slett"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    </div>`).join('') : '<div class="empty" style="padding:14px">Ingen hendelser denne dagen</div>';
+  renderStats();
+}
+function addEvent(){
+  const ti=document.getElementById('ev-input'),tm=document.getElementById('ev-time');
+  const v=ti.value.trim();if(!v)return;
+  if(!state.events[selected])state.events[selected]=[];
+  state.events[selected].push({id:uid(),text:v,time:tm.value||''});
+  ti.value='';tm.value='';save();renderCalendar();
+}
+
+/* ===================== PROJECTS ===================== */
+function renderProjects(){
+  const g=document.getElementById('proj-grid');
+  let html=state.projects.map(p=>`
+    <div class="proj-card" data-id="${p.id}">
+      <div class="proj-cover" style="background-image:url('${p.cover}')"></div>
+      <button class="del" data-pdel="${p.id}" aria-label="Slett"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <div class="proj-body">
+        <div class="proj-name">${esc(p.name)}</div>
+        <div class="prog-wrap">
+          <div class="prog-row"><div class="prog-track"><div class="prog-fill" style="width:${p.progress}%"></div></div><div class="prog-val">${p.progress}%</div></div>
+          <input type="range" min="0" max="100" step="5" value="${p.progress}" data-prog="${p.id}" />
+        </div>
+      </div>
+    </div>`).join('');
+  html+=`<div class="proj-add" id="proj-add"><div class="pa-ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></div><span>Nytt prosjekt</span></div>`;
+  g.innerHTML=html;
+  document.getElementById('proj-meta').textContent=state.projects.length?`${state.projects.length} totalt`:'';
+  renderStats();
+}
+function addProject(){const name=prompt('Navn på prosjektet:');if(!name||!name.trim())return;state.projects.push({id:uid(),name:name.trim(),progress:0,cover:COVERS[state.projects.length%COVERS.length]});save();renderProjects();}
+
+function renderStats(){
+  document.getElementById('stat-todo').textContent=state.todos.filter(t=>!t.done).length;
+  document.getElementById('stat-ev').textContent=(state.events[todayKey()]||[]).length;
+  document.getElementById('stat-proj').textContent=state.projects.length;
+}
+
+/* ===================== EVENT WIRING ===================== */
+document.getElementById('todo-add').onclick=addTodo;
+document.getElementById('todo-input').addEventListener('keydown',e=>{if(e.key==='Enter')addTodo()});
+document.getElementById('ev-add').onclick=addEvent;
+document.getElementById('ev-input').addEventListener('keydown',e=>{if(e.key==='Enter')addEvent()});
+document.getElementById('prev').onclick=()=>{view.setMonth(view.getMonth()-1);renderCalendar()};
+document.getElementById('next').onclick=()=>{view.setMonth(view.getMonth()+1);renderCalendar()};
+document.getElementById('todo-list').addEventListener('click',e=>{
+  const del=e.target.closest('[data-del]');
+  if(del){state.todos=state.todos.filter(t=>t.id!==del.dataset.del);save();renderTodos();return;}
+  const row=e.target.closest('.todo');
+  if(row){const t=state.todos.find(x=>x.id===row.dataset.id);if(t){t.done=!t.done;save();renderTodos();}}
+});
+document.getElementById('days').addEventListener('click',e=>{const day=e.target.closest('[data-day]');if(day){selected=day.dataset.day;renderCalendar();}});
+document.getElementById('ev-list').addEventListener('click',e=>{
+  const del=e.target.closest('[data-evdel]');
+  if(del){state.events[selected]=(state.events[selected]||[]).filter(x=>x.id!==del.dataset.evdel);if(!state.events[selected].length)delete state.events[selected];save();renderCalendar();}
+});
+document.getElementById('proj-grid').addEventListener('click',e=>{
+  if(e.target.closest('#proj-add')){addProject();return;}
+  const del=e.target.closest('[data-pdel]');
+  if(del){state.projects=state.projects.filter(p=>p.id!==del.dataset.pdel);save();renderProjects();}
+});
+document.getElementById('proj-grid').addEventListener('input',e=>{
+  const r=e.target.closest('[data-prog]');
+  if(r){const p=state.projects.find(x=>x.id===r.dataset.prog);if(p){p.progress=+r.value;const c=r.closest('.proj-card');c.querySelector('.prog-fill').style.width=p.progress+'%';c.querySelector('.prog-val').textContent=p.progress+'%';save();renderStats();}}
+});
+
+/* ===================== SPOTIFY (Authorization Code + PKCE) ===================== */
+/* Fyll inn Client ID fra https://developer.spotify.com/dashboard her: */
+const SPOTIFY_CLIENT_ID = '';
+const SP_REDIRECT = location.origin + location.pathname;
+const SP_SCOPES = 'streaming user-read-email user-read-private user-read-playback-state user-modify-playback-state playlist-read-private user-read-currently-playing';
+
+let spPlayer=null, spDevice=null, spReady=false, spProgTimer=null;
+
+function b64url(buf){return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
+async function sha256(plain){return await crypto.subtle.digest('SHA-256', new TextEncoder().encode(plain));}
+function randStr(len){const a=crypto.getRandomValues(new Uint8Array(len));return Array.from(a,b=>('0'+b.toString(16)).slice(-2)).join('').slice(0,len);}
+
+async function spLogin(){
+  if(!SPOTIFY_CLIENT_ID){alert('Spotify er ikke konfigurert ennå — Client ID mangler.');return;}
+  const verifier=randStr(64);
+  const challenge=b64url(await sha256(verifier));
+  localStorage.setItem('sp_verifier',verifier);
+  const p=new URLSearchParams({client_id:SPOTIFY_CLIENT_ID,response_type:'code',redirect_uri:SP_REDIRECT,scope:SP_SCOPES,code_challenge_method:'S256',code_challenge:challenge});
+  location.href='https://accounts.spotify.com/authorize?'+p.toString();
+}
+function spStore(d){
+  if(d.access_token){
+    localStorage.setItem('sp_access',d.access_token);
+    localStorage.setItem('sp_expires',Date.now()+(d.expires_in*1000));
+    if(d.refresh_token)localStorage.setItem('sp_refresh',d.refresh_token);
+  }
+}
+async function spHandleRedirect(){
+  const q=new URLSearchParams(location.search);const code=q.get('code');
+  if(!code)return false;
+  const verifier=localStorage.getItem('sp_verifier');
+  const body=new URLSearchParams({client_id:SPOTIFY_CLIENT_ID,grant_type:'authorization_code',code,redirect_uri:SP_REDIRECT,code_verifier:verifier});
+  try{
+    const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});
+    spStore(await r.json());
+  }catch(e){console.warn('Spotify token-feil',e);}
+  history.replaceState({},'',SP_REDIRECT);
+  return true;
+}
+async function spToken(){
+  let tok=localStorage.getItem('sp_access');const exp=+localStorage.getItem('sp_expires')||0;
+  if(tok&&Date.now()<exp-60000)return tok;
+  const refresh=localStorage.getItem('sp_refresh');if(!refresh)return null;
+  try{
+    const body=new URLSearchParams({client_id:SPOTIFY_CLIENT_ID,grant_type:'refresh_token',refresh_token:refresh});
+    const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});
+    const d=await r.json();spStore(d);return d.access_token||null;
+  }catch(e){return null;}
+}
+function spLoggedIn(){return !!localStorage.getItem('sp_refresh')||(localStorage.getItem('sp_access')&&Date.now()<(+localStorage.getItem('sp_expires')||0));}
+function spLogout(){['sp_access','sp_expires','sp_refresh','sp_verifier'].forEach(k=>localStorage.removeItem(k));if(spPlayer)spPlayer.disconnect();location.reload();}
+
+window.onSpotifyWebPlaybackSDKReady=()=>{ initSpotifyPlayer(); };
+async function initSpotifyPlayer(){
+  if(!spLoggedIn()||typeof Spotify==='undefined')return;
+  const tok=await spToken();if(!tok)return;
+  spPlayer=new Spotify.Player({name:'Marcus Dashbord',getOAuthToken:cb=>{spToken().then(t=>cb(t));},volume:0.6});
+  spPlayer.addListener('ready',({device_id})=>{spDevice=device_id;spReady=true;});
+  spPlayer.addListener('not_ready',()=>{spReady=false;});
+  spPlayer.addListener('player_state_changed',spUpdateNowPlaying);
+  spPlayer.addListener('initialization_error',({message})=>console.warn(message));
+  spPlayer.addListener('authentication_error',({message})=>console.warn(message));
+  spPlayer.addListener('account_error',()=>{document.getElementById('sp-msg')&&(document.getElementById('sp-msg').textContent='Spotify Premium kreves for å spille i nettleseren.');});
+  spPlayer.connect();
+}
+
+function spRenderConnected(){
+  document.getElementById('sp-meta').innerHTML='<button class="sp-btn ghost" id="sp-logout">Koble fra</button>';
+  document.getElementById('sp-body').innerHTML=`
+    <div class="player" id="np">
+      <div class="np-art" id="np-art"></div>
+      <div class="np-info">
+        <div class="np-track" id="np-track">Ingen avspilling</div>
+        <div class="np-artist" id="np-artist">Velg en spilleliste under for å starte</div>
+        <div class="np-bar"><div class="np-bar-fill" id="np-bar"></div></div>
+        <div class="np-controls">
+          <button class="np-ctl" id="np-prev" aria-label="Forrige"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zM9.5 12l8.5 6V6z"/></svg></button>
+          <button class="np-ctl play" id="np-play" aria-label="Spill/pause"><svg viewBox="0 0 24 24" id="np-play-ico"><path d="M8 5v14l11-7z"/></svg></button>
+          <button class="np-ctl" id="np-next" aria-label="Neste"><svg viewBox="0 0 24 24"><path d="M16 6h2v12h-2zM6 18l8.5-6L6 6z"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <div class="pl-section">
+      <h3>Dine spillelister</h3>
+      <div class="pl-grid" id="pl-grid"><div class="empty" style="grid-column:1/-1">Laster spillelister…</div></div>
+    </div>`;
+  document.getElementById('sp-logout').onclick=spLogout;
+  document.getElementById('np-play').onclick=()=>spPlayer&&spPlayer.togglePlay();
+  document.getElementById('np-prev').onclick=()=>spPlayer&&spPlayer.previousTrack();
+  document.getElementById('np-next').onclick=()=>spPlayer&&spPlayer.nextTrack();
+  spLoadPlaylists();
+}
+function spUpdateNowPlaying(state){
+  if(!state||!state.track_window||!state.track_window.current_track)return;
+  const t=state.track_window.current_track;
+  const art=document.getElementById('np-art');
+  if(art){
+    const img=t.album.images&&t.album.images[0];
+    art.style.backgroundImage=img?`url('${img.url}')`:'none';
+    document.getElementById('np-track').textContent=t.name;
+    document.getElementById('np-artist').textContent=t.artists.map(a=>a.name).join(', ');
+    document.getElementById('np-play-ico').innerHTML=state.paused?'<path d="M8 5v14l11-7z"/>':'<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';
+    document.getElementById('sp-meta').firstChild&&(document.getElementById('np-bar').style.width=(state.position/state.duration*100)+'%');
+    if(spProgTimer)clearInterval(spProgTimer);
+    if(!state.paused){
+      let pos=state.position;const dur=state.duration;
+      spProgTimer=setInterval(()=>{pos+=1000;const bar=document.getElementById('np-bar');if(bar)bar.style.width=Math.min(100,pos/dur*100)+'%';},1000);
+    }
+  }
+}
+async function spLoadPlaylists(){
+  const tok=await spToken();if(!tok)return;
+  try{
+    const r=await fetch('https://api.spotify.com/v1/me/playlists?limit=18',{headers:{Authorization:'Bearer '+tok}});
+    const d=await r.json();
+    const grid=document.getElementById('pl-grid');if(!grid)return;
+    const items=(d.items||[]).filter(Boolean);
+    grid.innerHTML=items.length?items.map(p=>{
+      const img=p.images&&p.images[0]?p.images[0].url:'';
+      return `<div class="pl" data-uri="${p.uri}">
+        <div class="pl-cover" style="background-image:url('${img}')"><div class="pl-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div>
+        <div class="pl-name">${esc(p.name)}</div></div>`;
+    }).join(''):'<div class="empty" style="grid-column:1/-1">Ingen spillelister funnet</div>';
+    grid.querySelectorAll('.pl').forEach(el=>el.onclick=()=>spPlay(el.dataset.uri));
+  }catch(e){console.warn('Kunne ikke laste spillelister',e);}
+}
+async function spPlay(uri){
+  const tok=await spToken();if(!tok||!spDevice)return;
+  try{
+    await fetch('https://api.spotify.com/v1/me/player/play?device_id='+spDevice,{method:'PUT',headers:{Authorization:'Bearer '+tok,'Content-Type':'application/json'},body:JSON.stringify({context_uri:uri})});
+  }catch(e){console.warn('Avspilling feilet',e);}
+}
+document.getElementById('sp-login').onclick=spLogin;
+
+/* ===================== INIT ===================== */
+(async function init(){
+  tick();setInterval(tick,1000*20);
+  renderTodos();renderCalendar();renderProjects();
+  await spHandleRedirect();
+  if(spLoggedIn()){spRenderConnected();initSpotifyPlayer();}
+  else if(!SPOTIFY_CLIENT_ID){document.getElementById('sp-msg').textContent='Spotify kobles på snart — Client ID settes opp av Claude.';}
+})();
+</script>
+</body>
+</html>
