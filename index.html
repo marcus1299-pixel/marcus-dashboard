@@ -86,13 +86,23 @@
 
   .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:24px}
   .stat{
-    background:var(--surface);backdrop-filter:blur(50px) saturate(180%);
-    -webkit-backdrop-filter:blur(50px) saturate(180%);
-    border:1px solid var(--border);border-radius:var(--radius-sm);
+    background:linear-gradient(152deg,rgba(255,255,255,0.13),rgba(255,255,255,0.03));
+    backdrop-filter:blur(40px) saturate(185%);
+    -webkit-backdrop-filter:blur(40px) saturate(185%);
+    border:1px solid rgba(255,255,255,0.13);border-radius:var(--radius-sm);
     padding:20px 22px;position:relative;overflow:hidden;
-    box-shadow:0 24px 50px -28px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.14);
+    box-shadow:
+      0 24px 50px -28px rgba(0,0,0,0.65),
+      inset 0 1px 0 rgba(255,255,255,0.34),
+      inset 0 -1px 0 rgba(255,255,255,0.04);
     animation:rise .8s var(--ease) both;
   }
+  .stat::before{
+    content:"";position:absolute;top:0;left:10%;right:10%;height:46%;
+    background:linear-gradient(180deg,rgba(255,255,255,0.14),transparent);
+    border-radius:0 0 60% 60%;filter:blur(6px);pointer-events:none;z-index:0;
+  }
+  .stat > *{position:relative;z-index:1}
   .stat:nth-child(1){animation-delay:.05s}
   .stat:nth-child(2){animation-delay:.1s}
   .stat:nth-child(3){animation-delay:.15s}
@@ -135,13 +145,28 @@
   .grid{display:grid;grid-template-columns:1fr 1.22fr;gap:22px;align-items:start;margin-bottom:22px}
 
   .card{
-    background:var(--surface);backdrop-filter:blur(50px) saturate(180%);
-    -webkit-backdrop-filter:blur(50px) saturate(180%);
-    border:1px solid var(--border);border-radius:var(--radius);
-    padding:26px;position:relative;
-    box-shadow:0 30px 60px -28px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.14);
+    background:linear-gradient(152deg,rgba(255,255,255,0.14),rgba(255,255,255,0.03));
+    backdrop-filter:blur(40px) saturate(185%);
+    -webkit-backdrop-filter:blur(40px) saturate(185%);
+    border:1px solid rgba(255,255,255,0.13);border-radius:var(--radius);
+    padding:26px;position:relative;overflow:hidden;
+    box-shadow:
+      0 32px 64px -28px rgba(0,0,0,0.7),
+      0 30px 60px -40px rgba(255,90,31,0.35),
+      inset 0 1px 0 rgba(255,255,255,0.38),
+      inset 0 -1px 0 rgba(255,255,255,0.05),
+      inset 0 0 40px rgba(255,255,255,0.03);
     animation:rise .85s var(--ease) both;
   }
+  /* liquid glass: lys-sheen som renner over toppen */
+  .card::before{
+    content:"";position:absolute;top:0;left:8%;right:8%;height:48%;
+    background:linear-gradient(180deg,rgba(255,255,255,0.16),transparent);
+    border-radius:0 0 60% 60%;filter:blur(7px);pointer-events:none;z-index:0;
+  }
+  .card > *{position:relative;z-index:1}
+  .card{transition:transform .45s var(--ease),box-shadow .45s var(--ease)}
+  .card:hover{transform:translateY(-3px);box-shadow:0 42px 80px -30px rgba(0,0,0,0.75),0 36px 70px -38px rgba(255,90,31,0.45),inset 0 1px 0 rgba(255,255,255,0.42),inset 0 -1px 0 rgba(255,255,255,0.05),inset 0 0 40px rgba(255,255,255,0.04)}
   .card.todos{animation-delay:.2s}
   .card.cal{animation-delay:.28s}
   .card.music{animation-delay:.34s;margin-bottom:22px}
