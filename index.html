@@ -266,7 +266,7 @@
   .sp-tab.active{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 6px 16px -8px var(--glow)}
   .sp-sub{font-weight:700;font-size:12px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);margin:20px 0 12px}
   .sp-sub:first-child{margin-top:4px}
-  .tr-list{display:flex;flex-direction:column;gap:3px;max-height:380px;overflow-y:auto;margin:0 -6px;padding:0 6px}
+  .tr-list{display:flex;flex-direction:column;gap:3px;max-height:260px;overflow-y:auto;margin:0 -6px;padding:0 6px}
   .tr{display:flex;align-items:center;gap:13px;padding:8px 10px;border-radius:11px;cursor:pointer;transition:background .18s var(--ease)}
   .tr:hover{background:rgba(255,255,255,0.05)}
   .tr-art{width:44px;height:44px;border-radius:8px;flex:none;background:var(--surface-solid) center/cover;box-shadow:0 4px 10px -5px rgba(0,0,0,.6)}
@@ -709,7 +709,7 @@ function spTrackRow(t){
 }
 function spWire(c){c.querySelectorAll('.pl,.tr').forEach(el=>el.onclick=()=>spPlay(el.dataset.uri));}
 
-const SP_PL_PREVIEW=8;
+const SP_PL_PREVIEW=6;
 let spPlExpanded=false;
 async function spRenderPlaylists(c){
   c.innerHTML='<div class="empty">Laster spillelister…</div>';
