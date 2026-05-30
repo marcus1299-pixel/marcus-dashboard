@@ -1,0 +1,6 @@
+name = "jarvis-motor"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+
+# ANTHROPIC_API_KEY settes som hemmelighet, ikke her:
+#   npx wrangler secret put ANTHROPIC_API_KEY
