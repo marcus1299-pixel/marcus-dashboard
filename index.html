@@ -10,16 +10,16 @@
 <script src="https://sdk.scdn.co/spotify-player.js"></script>
 <style>
   :root{
-    --bg:#0c0a09;
+    --bg:#140a06;
     --bg-2:#13100e;
-    --surface:rgba(30,24,21,0.55);
-    --surface-2:rgba(38,30,26,0.7);
+    --surface:rgba(45,30,25,0.34);
+    --surface-2:rgba(50,34,28,0.5);
     --surface-solid:#1a1512;
-    --border:rgba(255,255,255,0.07);
-    --border-warm:rgba(255,120,60,0.22);
-    --text:#f7efe8;
-    --dim:#ab9d92;
-    --faint:#6c615a;
+    --border:rgba(255,255,255,0.13);
+    --border-warm:rgba(255,150,90,0.28);
+    --text:#fdf6ef;
+    --dim:rgba(255,255,255,0.6);
+    --faint:rgba(255,255,255,0.35);
     --accent:#ff5a1f;
     --accent-2:#ff8a3d;
     --accent-red:#ff3b30;
@@ -35,25 +35,27 @@
   html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
   body{
     font-family:'Manrope',sans-serif;
-    background:var(--bg);
+    background:#140a06;
     color:var(--text);
     min-height:100vh;
     overflow-x:hidden;
     position:relative;
   }
 
+  /* Aurora Glass: roterende fargerik gradient bak alt */
   body::before{
     content:"";
-    position:fixed;inset:0;z-index:-2;
-    background:
-      radial-gradient(800px 600px at 12% -5%, rgba(255,120,40,0.18), transparent 60%),
-      radial-gradient(700px 700px at 100% 8%, rgba(255,45,85,0.13), transparent 55%),
-      radial-gradient(900px 500px at 50% 110%, rgba(255,90,31,0.10), transparent 60%),
-      linear-gradient(180deg,#0c0a09,#0a0807);
+    position:fixed;inset:-25%;z-index:-2;
+    filter:blur(75px);
+    opacity:.55;
+    background:conic-gradient(from 120deg at 28% 28%, #ff6a2e, #ff2d66, #ff9a3d, #7a2dff, #ff6a2e);
+    animation:aurora 30s linear infinite;
   }
+  @keyframes aurora{to{transform:rotate(360deg)}}
+  /* mørk vignett over auroraen så tekst forblir lesbar */
   body::after{
-    content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.04;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(125% 95% at 50% 0%, transparent, #140a06 76%);
   }
 
   .wrap{max-width:1280px;margin:0 auto;padding:40px 36px 80px}
@@ -84,10 +86,11 @@
 
   .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:24px}
   .stat{
-    background:var(--surface);backdrop-filter:blur(24px) saturate(160%);
-    -webkit-backdrop-filter:blur(24px) saturate(160%);
+    background:var(--surface);backdrop-filter:blur(50px) saturate(180%);
+    -webkit-backdrop-filter:blur(50px) saturate(180%);
     border:1px solid var(--border);border-radius:var(--radius-sm);
     padding:20px 22px;position:relative;overflow:hidden;
+    box-shadow:0 24px 50px -28px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.14);
     animation:rise .8s var(--ease) both;
   }
   .stat:nth-child(1){animation-delay:.05s}
@@ -105,10 +108,11 @@
   .grid{display:grid;grid-template-columns:1fr 1.22fr;gap:22px;align-items:start;margin-bottom:22px}
 
   .card{
-    background:var(--surface);backdrop-filter:blur(28px) saturate(160%);
-    -webkit-backdrop-filter:blur(28px) saturate(160%);
+    background:var(--surface);backdrop-filter:blur(50px) saturate(180%);
+    -webkit-backdrop-filter:blur(50px) saturate(180%);
     border:1px solid var(--border);border-radius:var(--radius);
     padding:26px;position:relative;
+    box-shadow:0 30px 60px -28px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.14);
     animation:rise .85s var(--ease) both;
   }
   .card.todos{animation-delay:.2s}
