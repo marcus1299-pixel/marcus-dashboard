@@ -713,6 +713,8 @@ function spTrackRow(t){
 }
 function spWire(c){c.querySelectorAll('.pl,.tr').forEach(el=>el.onclick=()=>spPlay(el.dataset.uri));}
 
+const SP_PL_PREVIEW=8;
+let spPlExpanded=false;
 async function spRenderPlaylists(c){
   c.innerHTML='<div class="empty">Laster spillelister…</div>';
   if(!SP_CACHE.playlists){
@@ -721,7 +723,15 @@ async function spRenderPlaylists(c){
     SP_CACHE.playlists=(d.items||[]).filter(Boolean);
   }
   const it=SP_CACHE.playlists;
-  c.innerHTML=`<div class="pl-grid">${it.length?it.map(spPlCard).join(''):'<div class="empty" style="grid-column:1/-1">Ingen spillelister funnet</div>'}</div>`;
+  if(!it.length){c.innerHTML='<div class="empty" style="grid-column:1/-1">Ingen spillelister funnet</div>';return;}
+  const shown=spPlExpanded?it:it.slice(0,SP_PL_PREVIEW);
+  let h=`<div class="pl-grid">${shown.map(spPlCard).join('')}</div>`;
+  if(it.length>SP_PL_PREVIEW){
+    h+=`<button class="sp-more" id="sp-pl-more">${spPlExpanded?'Vis færre':'Vis alle ('+it.length+')'}</button>`;
+  }
+  c.innerHTML=h;
+  const btn=document.getElementById('sp-pl-more');
+  if(btn)btn.onclick=()=>{spPlExpanded=!spPlExpanded;spRenderPlaylists(c);};
   spWire(c);
 }
 async function spRenderLiked(c){
