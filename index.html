@@ -105,6 +105,33 @@
   .stat .lbl{color:var(--dim);font-weight:600;font-size:13px;margin-top:7px}
   .stat::after{content:"";position:absolute;top:-30px;right:-30px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,var(--glow),transparent 70%);opacity:.5}
 
+  /* ===== topp-rad: vær + milepæler ===== */
+  .toprow{display:grid;grid-template-columns:1fr 1.22fr;gap:22px;align-items:start;margin-bottom:22px}
+  .mini-add{width:32px;height:32px;border:1px solid var(--border);background:rgba(255,255,255,0.04);border-radius:10px;cursor:pointer;display:grid;place-items:center;transition:all .2s var(--ease)}
+  .mini-add:hover{border-color:var(--border-warm);background:rgba(255,90,31,0.1)}
+  .mini-add svg{width:17px;height:17px;stroke:var(--accent-2);stroke-width:2.4}
+  /* vær */
+  .wx-main{display:flex;align-items:center;gap:20px}
+  .wx-sym{font-size:54px;line-height:1;filter:drop-shadow(0 6px 14px rgba(0,0,0,.4))}
+  .wx-deg{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:48px;line-height:1;letter-spacing:-.02em}
+  .wx-info{flex:1}
+  .wx-desc{font-weight:600;font-size:15px;margin-top:4px;text-transform:capitalize}
+  .wx-extra{color:var(--dim);font-weight:600;font-size:13px;margin-top:6px;display:flex;gap:14px;flex-wrap:wrap}
+  .wx-extra span{display:flex;align-items:center;gap:5px}
+  /* milepæler */
+  .mile{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 0;border-bottom:1px solid var(--border)}
+  .mile:last-child{border:0}
+  .mile-l .mm{font-weight:600;font-size:15px}
+  .mile-l .md{color:var(--faint);font-weight:600;font-size:12px;margin-top:2px}
+  .mile-r{display:flex;align-items:baseline;gap:8px;flex:none}
+  .mile-c{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:28px;letter-spacing:-.02em;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-variant-numeric:tabular-nums}
+  .mile-c.past{background:none;color:var(--faint);-webkit-text-fill-color:var(--faint)}
+  .mile-u{color:var(--dim);font-weight:600;font-size:13px}
+  .mile-del{width:26px;height:26px;border:none;background:none;border-radius:8px;cursor:pointer;display:grid;place-items:center;opacity:0;transition:opacity .2s,background .2s;flex:none}
+  .mile:hover .mile-del{opacity:1}
+  .mile-del:hover{background:rgba(255,59,48,0.15)}
+  .mile-del svg{width:14px;height:14px;stroke:var(--accent-red);stroke-width:2}
+
   .grid{display:grid;grid-template-columns:1fr 1.22fr;gap:22px;align-items:start;margin-bottom:22px}
 
   .card{
@@ -300,6 +327,7 @@
 
   @media(max-width:900px){
     .grid{grid-template-columns:1fr}
+    .toprow{grid-template-columns:1fr}
     .stats{grid-template-columns:1fr}
     .wrap{padding:28px 20px 60px}
     header{align-items:flex-start;flex-direction:column}
@@ -336,6 +364,30 @@
       <div class="ico"><svg viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h4l2 3h8a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke-width="2" stroke-linejoin="round"/></svg></div>
       <div class="num" id="stat-proj">0</div>
       <div class="lbl">aktive prosjekter</div>
+    </div>
+  </section>
+
+  <!-- TOPP-RAD: vær + milepæler (begge fyller seg selv) -->
+  <section class="toprow">
+    <div class="card wx-card">
+      <div class="card-head">
+        <div class="card-title">
+          <div class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M17 18a4 4 0 000-8 6 6 0 00-11.6 2A3.5 3.5 0 006 18h11z" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg></div>
+          <h2>Bergen</h2>
+        </div>
+        <div class="meta" id="wx-upd"></div>
+      </div>
+      <div class="wx-main" id="wx-main"><div class="empty" style="padding:14px">Henter vær…</div></div>
+    </div>
+    <div class="card mile-card">
+      <div class="card-head">
+        <div class="card-title">
+          <div class="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M5 21V4M5 4h11l-2 4 2 4H5" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg></div>
+          <h2>Veien videre</h2>
+        </div>
+        <button class="mini-add" id="mile-add" aria-label="Legg til milepæl"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></button>
+      </div>
+      <div id="mile-list"></div>
     </div>
   </section>
 
@@ -427,6 +479,7 @@ const MONTHS=['januar','februar','mars','april','mai','juni','juli','august','se
 const WDAYS=['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
 
 let state=load();
+if(!state.milestones)state.milestones=[];
 let view=new Date(); view.setDate(1);
 let selected=todayKey();
 
@@ -789,10 +842,90 @@ async function spPlay(uri){
 }
 document.getElementById('sp-login').onclick=spLogin;
 
+/* ===================== MILEPÆLER (nedtelling, null daglig mating) ===================== */
+function daysUntil(dateStr){
+  const [y,m,d]=dateStr.split('-').map(Number);
+  const target=new Date(y,m-1,d); target.setHours(0,0,0,0);
+  const now=new Date(); now.setHours(0,0,0,0);
+  return Math.round((target-now)/86400000);
+}
+function fmtDate(dateStr){const [y,m,d]=dateStr.split('-').map(Number);return d+'. '+MONTHS[m-1]+' '+y;}
+function renderMilestones(){
+  const el=document.getElementById('mile-list');
+  const list=[...state.milestones].sort((a,b)=>daysUntil(a.date)-daysUntil(b.date));
+  if(!list.length){el.innerHTML='<div class="empty" style="padding:18px 4px">Legg til en milepæl — f.eks. «Master levert» eller «Første coaching-klient»</div>';return;}
+  el.innerHTML=list.map(m=>{
+    const n=daysUntil(m.date);
+    const past=n<0;
+    const big=past?'nådd':(n===0?'i dag':Math.abs(n));
+    const unit=(past||n===0)?'':(n===1?'dag':'dager');
+    return `<div class="mile" data-id="${m.id}">
+      <div class="mile-l"><div class="mm">${esc(m.name)}</div><div class="md">${fmtDate(m.date)}</div></div>
+      <div class="mile-r"><span class="mile-c ${past?'past':''}">${big}</span>${unit?`<span class="mile-u">${unit}</span>`:''}
+      <button class="mile-del" data-mdel="${m.id}" aria-label="Slett"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+    </div>`;
+  }).join('');
+}
+function addMilestone(){
+  const name=prompt('Navn på milepælen (f.eks. Master levert):');
+  if(!name||!name.trim())return;
+  const date=prompt('Måldato (ÅÅÅÅ-MM-DD, f.eks. 2026-12-15):');
+  if(!date||!/^\d{4}-\d{2}-\d{2}$/.test(date.trim())){if(date!==null)alert('Bruk formatet ÅÅÅÅ-MM-DD.');return;}
+  state.milestones.push({id:uid(),name:name.trim(),date:date.trim()});
+  save();renderMilestones();
+}
+document.getElementById('mile-add').onclick=addMilestone;
+document.getElementById('mile-list').addEventListener('click',e=>{
+  const del=e.target.closest('[data-mdel]');
+  if(del){state.milestones=state.milestones.filter(m=>m.id!==del.dataset.mdel);save();renderMilestones();}
+});
+
+/* ===================== VÆR (met.no / Yr — gratis, ingen nøkkel) ===================== */
+const WX_SYMBOLS={clearsky:'☀️',fair:'🌤️',partlycloudy:'⛅',cloudy:'☁️',fog:'🌫️',rain:'🌧️',lightrain:'🌦️',heavyrain:'⛈️',rainshowers:'🌦️',lightrainshowers:'🌦️',heavyrainshowers:'🌧️',sleet:'🌨️',snow:'❄️',lightsnow:'🌨️',heavysnow:'❄️',snowshowers:'🌨️',thunder:'⛈️',rainandthunder:'⛈️'};
+const WX_TEXT={clearsky:'klart',fair:'lettskyet',partlycloudy:'delvis skyet',cloudy:'overskyet',fog:'tåke',rain:'regn',lightrain:'lett regn',heavyrain:'kraftig regn',rainshowers:'regnbyger',lightrainshowers:'lette regnbyger',heavyrainshowers:'kraftige regnbyger',sleet:'sludd',snow:'snø',lightsnow:'lett snø',heavysnow:'kraftig snø',snowshowers:'snøbyger',thunder:'torden',rainandthunder:'regn og torden'};
+function wxKey(code){return (code||'').replace(/_(day|night|polartwilight)$/,'');}
+function wxEmoji(code){return WX_SYMBOLS[wxKey(code)]||'🌡️';}
+function wxDesc(code){return WX_TEXT[wxKey(code)]||'—';}
+async function loadWeather(){
+  const el=document.getElementById('wx-main');
+  try{
+    const r=await fetch('https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=60.39&lon=5.32');
+    if(!r.ok)throw 0;
+    const d=await r.json();
+    const series=d.properties.timeseries;
+    const now=series[0];
+    const temp=Math.round(now.data.instant.details.air_temperature);
+    const sym=(now.data.next_1_hours||now.data.next_6_hours||{}).summary?.symbol_code||'';
+    const wind=Math.round(now.data.instant.details.wind_speed);
+    // finn når nedbør starter de neste 12 timene
+    let rainMsg='';
+    for(let i=0;i<Math.min(series.length,13);i++){
+      const nx=series[i].data.next_1_hours;
+      if(nx&&/(rain|sleet|snow|thunder)/.test(nx.summary.symbol_code)){
+        const t=new Date(series[i].time);
+        const hh=t.getHours();
+        rainMsg= i===0?'nedbør nå':'nedbør fra kl. '+pad(hh);
+        break;
+      }
+    }
+    el.innerHTML=`
+      <div class="wx-sym">${wxEmoji(sym)}</div>
+      <div class="wx-info">
+        <div class="wx-deg">${temp}°</div>
+        <div class="wx-desc">${wxDesc(sym)}</div>
+        <div class="wx-extra"><span>💨 ${wind} m/s</span>${rainMsg?`<span>☔ ${rainMsg}</span>`:'<span>☂️ tørt fremover</span>'}</div>
+      </div>`;
+    document.getElementById('wx-upd').textContent='oppdatert '+pad(new Date().getHours())+':'+pad(new Date().getMinutes());
+  }catch(e){
+    el.innerHTML='<div class="empty" style="padding:14px">Kunne ikke hente vær akkurat nå</div>';
+  }
+}
+
 /* ===================== INIT ===================== */
 (async function init(){
   tick();setInterval(tick,1000*20);
-  renderTodos();renderCalendar();renderProjects();
+  renderTodos();renderCalendar();renderProjects();renderMilestones();
+  loadWeather();setInterval(loadWeather,1000*60*15);
   await spHandleRedirect();
   if(spLoggedIn()){spRenderConnected();initSpotifyPlayer();}
   else if(!SPOTIFY_CLIENT_ID){document.getElementById('sp-msg').textContent='Spotify kobles på snart — Client ID settes opp av Claude.';}
