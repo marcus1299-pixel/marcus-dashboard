@@ -636,9 +636,7 @@ function spRenderConnected(){
     </div>
     <div class="sp-tabs">
       <button class="sp-tab active" data-tab="playlists">Spillelister</button>
-      <button class="sp-tab" data-tab="liked">Likte sanger</button>
       <button class="sp-tab" data-tab="recent">Nylig spilt</button>
-      <button class="sp-tab" data-tab="search">Søk</button>
     </div>
     <div id="sp-tab-content"></div>`;
   document.getElementById('sp-logout').onclick=spLogout;
@@ -674,9 +672,7 @@ function spSwitchTab(tab){
   document.querySelectorAll('.sp-tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===tab));
   const c=document.getElementById('sp-tab-content');if(!c)return;
   if(tab==='playlists')spRenderPlaylists(c);
-  else if(tab==='liked')spRenderLiked(c);
   else if(tab==='recent')spRenderRecent(c);
-  else if(tab==='search')spRenderSearch(c);
 }
 async function spApi(path){
   const tok=await spToken();if(!tok)return {__err:401};
