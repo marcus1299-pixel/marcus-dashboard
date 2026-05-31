@@ -576,6 +576,21 @@ function keyOf(y,m,d){return y+'-'+pad(m+1)+'-'+pad(d)}
 function todayKey(){const t=new Date();return keyOf(t.getFullYear(),t.getMonth(),t.getDate())}
 function esc(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
+/* ===== AUTO-DATA (Google Calendar via data.json) =====
+   Holdes adskilt fra state.events (localStorage) så manuelle hendelser aldri overskrives.
+   data.json regenereres av gen-calendar.js. */
+let autoEvents={};
+function eventsFor(k){return [...(autoEvents[k]||[]),...(state.events[k]||[])];}
+async function loadAuto(){
+  try{
+    const r=await fetch('data.json?v='+Date.now());
+    if(!r.ok)return;
+    const j=await r.json();
+    autoEvents=j.events||{};
+    renderCalendar();
+  }catch(e){/* offline e.l. — dashbordet funker uansett */}
+}
+
 function tick(){
   const n=new Date();
   document.getElementById('clock').textContent=pad(n.getHours())+':'+pad(n.getMinutes());
@@ -612,7 +627,7 @@ function renderCalendar(){
   for(let d=1;d<=dim;d++){
     const k=keyOf(y,m,d);const cls=['day'];
     if(k===tk)cls.push('today');if(k===selected)cls.push('sel');
-    const has=state.events[k]&&state.events[k].length;
+    const has=eventsFor(k).length;
     html+=`<div class="${cls.join(' ')}" data-day="${k}">${d}${has?'<span class="dot"></span>':''}</div>`;
   }
   document.getElementById('days').innerHTML=html;renderSelected();
@@ -620,13 +635,13 @@ function renderCalendar(){
 function renderSelected(){
   const [y,m,d]=selected.split('-').map(Number);const dt=new Date(y,m-1,d);
   document.getElementById('sel-date').innerHTML=`${WDAYS[dt.getDay()]} <span>${d}. ${MONTHS[m-1]}</span>`;
-  const evs=(state.events[selected]||[]).slice().sort((a,b)=>(a.time||'99').localeCompare(b.time||'99'));
+  const evs=eventsFor(selected).slice().sort((a,b)=>(a.time||'99').localeCompare(b.time||'99'));
   const list=document.getElementById('ev-list');
   list.innerHTML=evs.length?evs.map(e=>`
-    <div class="ev">
+    <div class="ev${e.auto?' auto':''}">
       <span class="etime ${e.time?'':'none'}">${e.time||'—'}</span>
       <span class="etxt">${esc(e.text)}</span>
-      <button class="del" data-evdel="${e.id}" aria-label="Slett"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      ${e.auto?'<span class="ev-src" title="Fra Google Calendar">kal</span>':`<button class="del" data-evdel="${e.id}" aria-label="Slett"><svg viewBox="0 0 24 24" fill="none"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`}
     </div>`).join('') : '<div class="empty" style="padding:14px">Ingen hendelser denne dagen</div>';
   renderStats();
 }
@@ -656,14 +671,25 @@ function renderProjects(){
   html+=`<div class="proj-add" id="proj-add"><div class="pa-ico"><svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg></div><span>Nytt prosjekt</span></div>`;
   g.innerHTML=html;
   document.getElementById('proj-meta').textContent=state.projects.length?`${state.projects.length} totalt`:'';
+  // Skjul hele prosjekt-kortet til det finnes prosjekter (tomt kort = ødelagt-følelse)
+  const sec=document.querySelector('section.card.proj'); if(sec)sec.style.display=state.projects.length?'':'none';
   renderStats();
 }
 function addProject(){const name=prompt('Navn på prosjektet:');if(!name||!name.trim())return;state.projects.push({id:uid(),name:name.trim(),progress:0,cover:COVERS[state.projects.length%COVERS.length]});save();renderProjects();}
 
 function renderStats(){
-  document.getElementById('stat-todo').textContent=state.todos.filter(t=>!t.done).length;
-  document.getElementById('stat-ev').textContent=(state.events[todayKey()]||[]).length;
-  document.getElementById('stat-proj').textContent=state.projects.length;
+  // Skjul tomme stat-kort (et "0" leses som ødelagt). Vis bare det som har innhold.
+  const stats=[
+    ['stat-todo', state.todos.filter(t=>!t.done).length],
+    ['stat-ev',   eventsFor(todayKey()).length],
+    ['stat-proj', state.projects.length],
+  ];
+  let shown=0;
+  stats.forEach(([id,n])=>{
+    const el=document.getElementById(id); el.textContent=n;
+    const box=el.closest('.stat'); if(box){box.style.display=n?'':'none'; if(n)shown++;}
+  });
+  const sec=document.querySelector('section.stats'); if(sec)sec.style.display=shown?'':'none';
 }
 
 /* ===================== EVENT WIRING ===================== */
@@ -1074,6 +1100,7 @@ document.getElementById('jv-text').addEventListener('keydown',e=>{if(e.key==='En
 (async function init(){
   tick();setInterval(tick,1000*20);
   renderTodos();renderCalendar();renderProjects();renderMilestones();
+  loadAuto();setInterval(loadAuto,1000*60*30);
   loadWeather();setInterval(loadWeather,1000*60*15);
   await spHandleRedirect();
   if(spLoggedIn()){spRenderConnected();initSpotifyPlayer();}
